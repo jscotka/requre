@@ -87,6 +87,19 @@ class TestStoreTypes(BaseClass):
         self.assertEqual("y", STORAGE.read(keys=self.keys))
         self.assertEqual(0, len(STORAGE.storage_object["a"]["b"]))
 
+    def test_list_data_unused(self):
+        STORAGE.store(keys=self.keys, values="x", metadata={})
+        STORAGE.store(keys=self.keys, values="y", metadata={})
+        print(list(STORAGE.find_unused()))
+        self.assertEqual(2, len(list(STORAGE.find_unused())))
+        self.assertEqual(2, len(STORAGE.storage_object["a"]["b"]))
+        self.assertEqual("x", STORAGE.read(keys=self.keys))
+        self.assertEqual(1, len(list(STORAGE.find_unused())))
+        self.assertEqual(1, len(STORAGE.storage_object["a"]["b"]))
+        self.assertEqual("y", STORAGE.read(keys=self.keys))
+        self.assertEqual(0, len(STORAGE.storage_object["a"]["b"]))
+        self.assertEqual(0, len(list(STORAGE.find_unused())))
+
     def test_dict_data(self):
         DataMiner().data_type = DataTypes.Dict
         STORAGE.store(keys=self.keys, values="x", metadata={})
@@ -97,6 +110,19 @@ class TestStoreTypes(BaseClass):
         self.assertEqual("y", STORAGE.read(keys=self.keys))
         self.assertEqual(2, len(STORAGE.storage_object["a"]["b"]))
 
+    def test_dict_data_unused_data(self):
+        DataMiner().data_type = DataTypes.Dict
+        STORAGE.store(keys=self.keys, values="x", metadata={})
+        STORAGE.store(keys=self.keys, values="y", metadata={})
+        print(list(STORAGE.find_unused()))
+        self.assertEqual(2, len(STORAGE.storage_object["a"]["b"]))
+        self.assertEqual("y", STORAGE.read(keys=self.keys))
+        self.assertEqual(2, len(STORAGE.storage_object["a"]["b"]))
+        self.assertEqual("y", STORAGE.read(keys=self.keys))
+        self.assertEqual(2, len(STORAGE.storage_object["a"]["b"]))
+
+        print(list(STORAGE.find_unused()))
+        assert False
 
 class Metadata(BaseClass):
     keys = ["a", "b"]

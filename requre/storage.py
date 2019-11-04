@@ -24,7 +24,6 @@ import os
 import time
 from _collections_abc import Hashable
 from typing import Dict, List, Any, Optional
-
 from enum import Enum
 import yaml
 
@@ -44,6 +43,7 @@ class DataStructure:
 
     OUTPUT_KEY = "output"
     METADATA_KEY = "metadata"
+    USED_KEY = "already_used"
 
     def __init__(self, output: Any):
         self.output = output
@@ -78,6 +78,8 @@ class DataStructure:
         """
         data = cls(dict_repr[cls.OUTPUT_KEY])
         data.metadata = dict_repr[cls.METADATA_KEY]
+        # mark how many times it was used
+        data.metadata = {cls.USED_KEY: data.metadata.get(cls.USED_KEY, 0) + 1}
         return data
 
 
@@ -342,6 +344,25 @@ class PersistentObjectStorage(metaclass=SingletonMeta):
             output = yaml.safe_load(yaml_file)
         self.storage_object = output
         return output
+
+    def find_unused(self, internal_object: Optional[dict] = None, prefix_list: Optional[list] = None):
+        if internal_object is None:
+            internal_object = self.storage_object
+        if prefix_list is None:
+            prefix_list = []
+        if isinstance(internal_object, dict) \
+                and DataStructure.METADATA_KEY in internal_object\
+                and DataStructure.OUTPUT_KEY in internal_object:
+            if DataStructure.USED_KEY not in internal_object[DataStructure.METADATA_KEY] or internal_object[DataStructure.METADATA_KEY].get(DataStructure.USED_KEY) == 0:
+                yield internal_object, prefix_list
+        elif isinstance(internal_object, list):
+            if len(internal_object) > 0:
+                for item in internal_object:
+                    yield item, prefix_list
+        elif isinstance(internal_object, dict):
+            for k, v in internal_object.items():
+                if v is not None:
+                    yield from self.find_unused(internal_object=v, prefix_list=prefix_list + [k])
 
 
 def use_persistent_storage_without_overwriting(cls):
