@@ -35,3 +35,7 @@ class ItemNotInStorage(PersistentStorageException):
 
 class StorageNoResponseLeft(PersistentStorageException):
     pass
+
+
+class StorageKeyError(PersistentStorageException):
+    pass
